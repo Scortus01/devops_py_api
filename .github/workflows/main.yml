@@ -44,12 +44,9 @@ jobs:
         run: docker build -t my-app .
 
       - name: Login to Render
-        uses: renderapp/action-login@v1
-        with:
-          render_token: ${{ secrets.RENDER_TOKEN }}
+        run: render login --token ${{ secrets.RENDER_TOKEN }}
 
       - name: Push Docker image to Render
         run: |
           docker tag my-app:latest registry.render.com/devops_py_api:latest
           docker push registry.render.com/my-app:latest
-
