@@ -1,4 +1,4 @@
-name: Docker Publish to Render
+name: Docker Publish
 
 on:
   push:
@@ -10,6 +10,7 @@ on:
 
 jobs:
   test:
+  
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -32,7 +33,7 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
+          
   build-and-publish:
     runs-on: ubuntu-latest
     needs: test
@@ -40,13 +41,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Build Docker image
-        run: docker build -t my-app .
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to Render
-        run: render login --token ${{ secrets.RENDER_TOKEN }}
-
-      - name: Push Docker image to Render
-        run: |
-          docker tag my-app:latest registry.render.com/devops_py_api:latest
-          docker push registry.render.com/my-app:latest
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .  # Replace with the path to your Dockerfile if different
+          push: true
+          tags: braian74/mysql:${{ github.sha }}
