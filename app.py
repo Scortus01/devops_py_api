@@ -14,6 +14,9 @@ def get_modulos():
 
 
 
+
+
+
 @app.route('/modulos', methods=['POST'])
 def create_modulo():
     modulo_data = request.get_json()
