@@ -1,0 +1,5 @@
+flask
+uvicorn==0.21.1
+pydantic==1.10.7
+pytest==7.4.0
+mysql-connector-python
