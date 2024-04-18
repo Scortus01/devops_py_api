@@ -12,9 +12,6 @@ def get_modulos():
     modulos = get_all_modulos()
     return jsonify([modulo.dict() for modulo in modulos])
 
-
-
-
 @app.route('/modulos', methods=['POST'])
 def create_modulo():
     modulo_data = request.get_json()
