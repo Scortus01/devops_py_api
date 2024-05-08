@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
 from database import Modulo, Curso, create_modulo_table, create_curso_table, insert_modulo, insert_curso, \
-    get_all_modulos, get_all_cursos, close_connection
+    get_all_modulos, get_all_cursos
 from flask import request
 
 app = Flask(__name__)
@@ -31,13 +31,9 @@ def create_curso():
     insert_curso(curso)
     return jsonify(curso.dict())
 
-@app.route('/healthcheck', methods=['GET'])
+@app.route('/', methods=['GET'])
 def healthcheck():
     return jsonify({'status': 'OK'}), 200
-
-@app.teardown_appcontext
-def shutdown_event(exception=None):
-    close_connection()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)

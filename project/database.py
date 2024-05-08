@@ -1,10 +1,18 @@
 import mysql.connector
 from pydantic import BaseModel
 from typing import List, Optional
-import threading
+from contextlib import contextmanager
+from typing import Generator
 
-db_lock = threading.Lock()
+# Configuración de la conexión a la base de datos
+db_connection_params = {
+    "host": "devops0001.mysql.database.azure.com",
+    "user": "devops",
+    "password": "#braian987",
+    "database": "devops"
+}
 
+# Definición de los modelos
 class Modulo(BaseModel):
     id: Optional[int] = None
     nombre: str
@@ -18,17 +26,23 @@ class Curso(BaseModel):
     precio: float
     duracion: int
 
-db_connection = mysql.connector.connect(
-    host="devops0001.mysql.database.azure.com",
-    user="devops",
-    password="#braian987",
-    database="devops"
-)
-db_cursor = db_connection.cursor()
+# Contexto para la conexión a la base de datos
+@contextmanager
+def db_connection() -> Generator:
+    connection = None
+    try:
+        connection = mysql.connector.connect(**db_connection_params)
+        cursor = connection.cursor()
+        yield connection, cursor
+    finally:
+        if connection is not None and connection.is_connected():
+            connection.close()
+
+# Funciones para gestionar módulos
 
 def create_modulo_table():
-    with db_lock:
-        db_cursor.execute('''
+    with db_connection() as (connection, cursor):
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS modulos (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nombre VARCHAR(255) NOT NULL,
@@ -36,27 +50,43 @@ def create_modulo_table():
                 nivel VARCHAR(255)
             )
         ''')
-        db_connection.commit()
+        connection.commit()
 
 def insert_modulo(modulo: Modulo):
-    with db_lock:
+    with db_connection() as (connection, cursor):
         query = "INSERT INTO modulos (nombre, duracion, nivel) VALUES (%s, %s, %s)"
         values = (modulo.nombre, modulo.duracion, modulo.nivel)
-        db_cursor.execute(query, values)
-        db_connection.commit()
+        cursor.execute(query, values)
+        connection.commit()
 
 def get_all_modulos() -> List[Modulo]:
-    with db_lock:
-        db_cursor.execute("SELECT id, nombre, duracion, nivel FROM modulos")
+    with db_connection() as (connection, cursor):
+        cursor.execute("SELECT id, nombre, duracion, nivel FROM modulos")
         modulos = []
-        for row in db_cursor.fetchall():
+        for row in cursor.fetchall():
             modulo = Modulo(id=row[0], nombre=row[1], duracion=row[2], nivel=row[3])
             modulos.append(modulo)
         return modulos
 
+def update_modulo(id: int, modulo: Modulo):
+    with db_connection() as (connection, cursor):
+        query = "UPDATE modulos SET nombre = %s, duracion = %s, nivel = %s WHERE id = %s"
+        values = (modulo.nombre, modulo.duracion, modulo.nivel, id)
+        cursor.execute(query, values)
+        connection.commit()
+
+def delete_modulo(id: int):
+    with db_connection() as (connection, cursor):
+        query = "DELETE FROM modulos WHERE id = %s"
+        values = (id,)
+        cursor.execute(query, values)
+        connection.commit()
+
+# Funciones para gestionar cursos
+
 def create_curso_table():
-    with db_lock:
-        db_cursor.execute('''
+    with db_connection() as (connection, cursor):
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS cursos (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 titulo VARCHAR(255) NOT NULL,
@@ -65,26 +95,31 @@ def create_curso_table():
                 duracion INT
             )
         ''')
-        db_connection.commit()
+        connection.commit()
 
 def insert_curso(curso: Curso):
-    with db_lock:
+    with db_connection() as (connection, cursor):
         query = "INSERT INTO cursos (titulo, descripcion, precio, duracion) VALUES (%s, %s, %s, %s)"
         values = (curso.titulo, curso.descripcion, curso.precio, curso.duracion)
-        db_cursor.execute(query, values)
-        db_connection.commit()
+        cursor.execute(query, values)
+        connection.commit()
 
 def get_all_cursos() -> List[Curso]:
-    with db_lock:
-        db_cursor.execute("SELECT id, titulo, descripcion, precio, duracion FROM cursos")
+    with db_connection() as (connection, cursor):
+        cursor.execute("SELECT id, titulo, descripcion, precio, duracion FROM cursos")
         cursos = []
-        for row in db_cursor.fetchall():
+        for row in cursor.fetchall():
             curso = Curso(id=row[0], titulo=row[1], descripcion=row[2], precio=row[3], duracion=row[4])
             cursos.append(curso)
         return cursos
 
-# Otras funciones como update_modulo, delete_modulo, update_curso, delete_curso, etc., seguirían un patrón similar.
-# Se han omitido aquí por brevedad, pero puedes implementarlas de manera análoga.
-
-def close_connection():
-    db_connection.close()
+def update_curso(id: int, curso: Curso):
+    with db_connection() as (connection, cursor):
+        query = """
+            UPDATE cursos 
+            SET titulo = %s, descripcion = %s, precio = %s, duracion = %s 
+            WHERE id = %s
+        """
+        values = (curso.titulo, curso.descripcion, curso.precio, curso.duracion, id)
+        cursor.execute(query, values)
+        connection.commit()
