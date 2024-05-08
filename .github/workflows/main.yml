@@ -50,6 +50,6 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: .  # Replace with the path to your Dockerfile if different
+          context: ./project  # Replace with the path to your Dockerfile if different
           push: true
           tags: braian74/mysql:${{ github.sha }}
