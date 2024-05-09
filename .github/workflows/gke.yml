@@ -16,6 +16,7 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GCLOUD_PROJECT: "devops-422820"
   GKE_CLUSTER: course-mgmt-cluster   # Add your cluster name here.
   GKE_ZONE: us-central1-c   # Add your cluster zone here.
   DEPLOYMENT_NAME: gke-api # Add your deployment name here.
