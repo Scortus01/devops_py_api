@@ -15,7 +15,8 @@ on:
       - main
 
 env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  #PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  PROJECT_ID: devops-422820
   GCLOUD_PROJECT: "devops-422820"
   GKE_CLUSTER: course-mgmt-cluster   # Add your cluster name here.
   GKE_ZONE: us-central1-c   # Add your cluster zone here.
@@ -46,6 +47,7 @@ jobs:
     # Get the GKE credentials so we can deploy to the cluster
     - uses: google-github-actions/get-gke-credentials@db150f2cc60d1716e61922b832eae71d2a45938f
       with:
+        project_id: ${{ secrets.GKE_PROJECT }}
         cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_ZONE }}
         credentials: ${{ secrets.GKE_SA_KEY }}
